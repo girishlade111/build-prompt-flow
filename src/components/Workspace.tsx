@@ -26,12 +26,14 @@ interface WorkspaceProps {
   onPromptSubmit: (prompt: string) => void;
   onPromptOptimize: (prompt: string) => void;
   onNewProject: () => void;
+  generatedCode?: string;
 }
 
 export const Workspace: React.FC<WorkspaceProps> = ({
   onPromptSubmit,
   onPromptOptimize,
-  onNewProject
+  onNewProject,
+  generatedCode
 }) => {
   const [activeTab, setActiveTab] = useState('code');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -158,7 +160,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               {/* Tab Content */}
               <div className="flex-1">
                 <TabsContent value="code" className="h-full m-0">
-                  <CodeEditor />
+                  <CodeEditor generatedCode={generatedCode} />
                 </TabsContent>
 
                 <TabsContent value="preview" className="h-full m-0">

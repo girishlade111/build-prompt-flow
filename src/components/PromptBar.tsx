@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit3, Sparkles, Send, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCodeGeneration } from '@/hooks/useCodeGeneration';
 
 interface PromptBarProps {
   onSubmit: (prompt: string) => void;
@@ -21,23 +22,28 @@ export const PromptBar: React.FC<PromptBarProps> = ({
   className
 }) => {
   const [prompt, setPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { optimizePrompt, isGenerating } = useCodeGeneration();
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isGenerating) return;
     
-    setIsLoading(true);
     await onSubmit(prompt);
-    setIsLoading(false);
   };
 
   const handleOptimize = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isGenerating || isOptimizing) return;
     
-    setIsLoading(true);
-    await onOptimize(prompt);
-    setIsLoading(false);
+    setIsOptimizing(true);
+    try {
+      const optimizedPrompt = await optimizePrompt(prompt);
+      if (optimizedPrompt) {
+        setPrompt(optimizedPrompt);
+      }
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   return (
@@ -81,7 +87,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                     "focus:ring-2 focus:ring-primary focus:border-transparent",
                     "transition-all duration-300"
                   )}
-                  disabled={isLoading}
+                  disabled={isGenerating || isOptimizing}
                 />
               </div>
               
@@ -91,23 +97,31 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                   variant="outline"
                   size="lg"
                   onClick={handleOptimize}
-                  disabled={!prompt.trim() || isLoading}
+                  disabled={!prompt.trim() || isGenerating || isOptimizing}
                   className="px-4 py-6 border-border hover:border-accent hover:bg-accent/10 transition-all duration-300"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  {isOptimizing ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <Sparkles className="w-5 h-5" />
+                  )}
                 </Button>
                 
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!prompt.trim() || isLoading}
+                  disabled={!prompt.trim() || isGenerating || isOptimizing}
                   className={cn(
                     "px-6 py-6 gradient-primary text-primary-foreground",
                     "hover:shadow-glow transition-all duration-300",
                     "disabled:opacity-50 disabled:cursor-not-allowed"
                   )}
                 >
-                  {isLoading ? (
+                  {isGenerating ? (
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

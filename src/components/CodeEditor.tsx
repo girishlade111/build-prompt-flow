@@ -25,9 +25,10 @@ interface FileTreeItem {
 
 interface CodeEditorProps {
   className?: string;
+  generatedCode?: string;
 }
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ className }) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({ className, generatedCode }) => {
   const [currentFile, setCurrentFile] = useState('App.tsx');
   const [code, setCode] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -38,7 +39,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className }) => {
       type: 'folder',
       isOpen: true,
       children: [
-        { name: 'App.tsx', type: 'file', content: '// Your generated code will appear here...\n\nfunction App() {\n  return (\n    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">\n      <h1>Welcome to your AI-generated website!</h1>\n    </div>\n  );\n}\n\nexport default App;' },
+        { name: 'App.tsx', type: 'file', content: generatedCode || '// Your generated code will appear here...\n\nfunction App() {\n  return (\n    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">\n      <h1>Welcome to your AI-generated website!</h1>\n    </div>\n  );\n}\n\nexport default App;' },
         { name: 'index.css', type: 'file', content: '/* Styles will be generated here */' },
         { name: 'components', type: 'folder', isOpen: false, children: [] }
       ]
@@ -47,7 +48,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className }) => {
   ]);
 
   useEffect(() => {
-    // Load initial file content
+    // Load initial file content or update when generatedCode changes
     const findFile = (items: FileTreeItem[], fileName: string): string => {
       for (const item of items) {
         if (item.type === 'file' && item.name === fileName) {
@@ -62,7 +63,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className }) => {
     };
     
     setCode(findFile(fileTree, currentFile));
-  }, [currentFile, fileTree]);
+  }, [currentFile, fileTree, generatedCode]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);

@@ -3,44 +3,51 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LandingPage } from '@/components/LandingPage';
 import { Workspace } from '@/components/Workspace';
 import { useToast } from '@/hooks/use-toast';
+import { useCodeGeneration } from '@/hooks/useCodeGeneration';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'workspace'>('landing');
+  const [generatedCode, setGeneratedCode] = useState<string>('');
   const { toast } = useToast();
+  const { generateCode } = useCodeGeneration();
 
   const handlePromptSubmit = async (prompt: string) => {
     toast({
       title: "Generating website...",
-      description: `Creating your website: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`,
+      description: `AI is creating your website: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`,
     });
     
-    // Simulate generation process
-    setTimeout(() => {
-      setCurrentView('workspace');
-      toast({
-        title: "Website generated!",
-        description: "Your website is ready for editing.",
+    try {
+      const result = await generateCode({
+        prompt,
+        type: 'generate'
       });
-    }, 2000);
+      
+      if (result) {
+        setGeneratedCode(result.content);
+        setCurrentView('workspace');
+        toast({
+          title: "Website generated!",
+          description: "Your website is ready for editing.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Generation failed",
+        description: "There was an error generating your website. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handlePromptOptimize = async (prompt: string) => {
-    toast({
-      title: "Optimizing prompt...",
-      description: "AI is refining your prompt for better results.",
-    });
-    
-    // Simulate optimization
-    setTimeout(() => {
-      toast({
-        title: "Prompt optimized!",
-        description: "Your prompt has been enhanced for better AI output.",
-      });
-    }, 1500);
+    // This is handled internally by the PromptBar component now
+    return prompt;
   };
 
   const handleNewProject = () => {
     setCurrentView('landing');
+    setGeneratedCode('');
     toast({
       title: "New project started",
       description: "Ready to build something amazing!",
@@ -76,6 +83,7 @@ const Index = () => {
               onPromptSubmit={handlePromptSubmit}
               onPromptOptimize={handlePromptOptimize}
               onNewProject={handleNewProject}
+              generatedCode={generatedCode}
             />
           </motion.div>
         )}
