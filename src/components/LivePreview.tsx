@@ -119,7 +119,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             sandbox="allow-scripts allow-same-origin"
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
