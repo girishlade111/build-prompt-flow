@@ -68,15 +68,16 @@ CRITICAL INSTRUCTIONS:
 - Ensure responsive design that works on all devices
 - Implement smooth animations and transitions
 - Use semantic HTML5 elements
-- Write efficient, well-structured code
+- Write efficient, well-structured, properly formatted and indented code
+- Ensure all code is properly formatted with correct indentation and spacing
 
-FILE STRUCTURE REQUIREMENTS:
-You MUST return the code in this exact JSON format:
+MANDATORY FILE STRUCTURE REQUIREMENTS:
+You MUST return the code in this EXACT JSON format with proper formatting:
 {
   "files": {
-    "index.html": "HTML content here",
-    "styles.css": "CSS content here", 
-    "script.js": "JavaScript content here"
+    "index.html": "Complete HTML content with proper DOCTYPE, head, and body sections",
+    "styles.css": "Complete CSS content with proper formatting and comments", 
+    "script.js": "Complete JavaScript content with proper formatting and comments"
   }
 }
 
@@ -85,7 +86,10 @@ HTML Requirements:
 - Include proper meta tags for SEO and responsiveness
 - Link to external fonts (Google Fonts) if needed
 - Include proper DOCTYPE and language attributes
-- Link to styles.css and script.js files
+- Link to styles.css and script.js files with proper relative paths
+- Use proper indentation (2 or 4 spaces consistently)
+- Include meaningful class names and IDs
+- Ensure accessibility with proper ARIA labels and alt texts
 
 CSS Requirements:
 - Use modern CSS features (Grid, Flexbox, CSS Variables)
@@ -94,14 +98,21 @@ CSS Requirements:
 - Add smooth transitions and hover effects
 - Ensure accessibility with proper contrast ratios
 - Use CSS Grid and Flexbox for layouts
+- Organize CSS with proper comments and sections
+- Use proper indentation and formatting
+- Include CSS reset or normalize styles
+- Use meaningful class names following BEM or similar methodology
 
 JavaScript Requirements:
 - Use modern ES6+ syntax
 - Implement interactive features and animations
 - Add event listeners for user interactions
-- Use proper error handling
-- Write clean, modular, and commented code
+- Use proper error handling with try-catch blocks
+- Write clean, modular, and well-commented code
 - Include form validation if forms are present
+- Use proper indentation and formatting
+- Follow best practices for variable naming and function structure
+- Ensure code is optimized and efficient
 
 Design Guidelines:
 - Create beautiful, modern interfaces
@@ -110,8 +121,17 @@ Design Guidelines:
 - Ensure excellent user experience
 - Make it visually appealing and professional
 - Use appropriate color schemes and contrast
+- Ensure mobile-first responsive design
+- Include loading states and error handling for better UX
 
-Return ONLY the JSON object with the file contents, no explanations or markdown formatting.`;
+FORMATTING REQUIREMENTS:
+- All code must be properly indented
+- Use consistent spacing and line breaks
+- Include proper comments explaining complex logic
+- Follow industry best practices for code structure
+- Ensure code is readable and maintainable
+
+Return ONLY the JSON object with the properly formatted file contents. Do not include any markdown formatting, explanations, or additional text.`;
 
       if (context?.previousCode) {
         systemPrompt += `\n\nExisting Code Context:\n${context.previousCode}`;
