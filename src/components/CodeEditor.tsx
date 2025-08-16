@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
@@ -33,13 +34,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className, generatedCode
   const [code, setCode] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   
-  const [fileTree] = useState<FileTreeItem[]>([
+  const [fileTree, setFileTree] = useState<FileTreeItem[]>([
     {
       name: 'src',
       type: 'folder',
       isOpen: true,
       children: [
-        { name: 'App.tsx', type: 'file', content: generatedCode || '// Your generated code will appear here...\n\nfunction App() {\n  return (\n    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">\n      <h1>Welcome to your AI-generated website!</h1>\n    </div>\n  );\n}\n\nexport default App;' },
+        { name: 'App.tsx', type: 'file', content: '' },
         { name: 'index.css', type: 'file', content: '/* Styles will be generated here */' },
         { name: 'components', type: 'folder', isOpen: false, children: [] }
       ]
@@ -47,8 +48,34 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className, generatedCode
     { name: 'package.json', type: 'file', content: '{}' }
   ]);
 
+  // Update the file tree when generatedCode changes
   useEffect(() => {
-    // Load initial file content or update when generatedCode changes
+    if (generatedCode && generatedCode.trim()) {
+      setFileTree(prev => 
+        prev.map(item => {
+          if (item.name === 'src') {
+            return {
+              ...item,
+              children: item.children?.map(child => 
+                child.name === 'App.tsx' 
+                  ? { ...child, content: generatedCode }
+                  : child
+              )
+            };
+          }
+          return item;
+        })
+      );
+      
+      // Update current code if viewing App.tsx
+      if (currentFile === 'App.tsx') {
+        setCode(generatedCode);
+      }
+    }
+  }, [generatedCode, currentFile]);
+
+  useEffect(() => {
+    // Load file content when currentFile changes
     const findFile = (items: FileTreeItem[], fileName: string): string => {
       for (const item of items) {
         if (item.type === 'file' && item.name === fileName) {
@@ -62,20 +89,19 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className, generatedCode
       return '';
     };
     
-    setCode(findFile(fileTree, currentFile));
-  }, [currentFile, fileTree, generatedCode]);
+    const fileContent = findFile(fileTree, currentFile);
+    setCode(fileContent);
+  }, [currentFile, fileTree]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
   };
 
   const handleSave = () => {
-    // Implement save functionality
     console.log('Saving code...');
   };
 
   const handleDownload = () => {
-    // Implement download functionality
     console.log('Downloading project...');
   };
 

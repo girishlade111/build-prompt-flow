@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LandingPage } from '@/components/LandingPage';
@@ -12,6 +13,11 @@ const Index = () => {
   const { generateCode } = useCodeGeneration();
 
   const handlePromptSubmit = async (prompt: string) => {
+    console.log('Prompt submitted:', prompt);
+    
+    // Always switch to workspace view immediately
+    setCurrentView('workspace');
+    
     toast({
       title: "Generating website...",
       description: `AI is creating your website: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`,
@@ -23,15 +29,19 @@ const Index = () => {
         type: 'generate'
       });
       
-      if (result) {
+      console.log('Generation result:', result);
+      
+      if (result && result.content) {
         setGeneratedCode(result.content);
-        setCurrentView('workspace');
         toast({
           title: "Website generated!",
           description: "Your website is ready for editing.",
         });
+      } else {
+        throw new Error('No content generated');
       }
     } catch (error) {
+      console.error('Generation failed:', error);
       toast({
         title: "Generation failed",
         description: "There was an error generating your website. Please try again.",

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -167,6 +168,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
                   <LivePreview 
                     device={previewDevice}
                     deviceSize={deviceSizes[previewDevice]}
+                    generatedCode={generatedCode}
                   />
                 </TabsContent>
               </div>

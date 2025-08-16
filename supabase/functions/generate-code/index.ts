@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -15,9 +16,9 @@ interface GenerateCodeRequest {
   };
 }
 
-interface OpenRouterMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: { text: string }[];
 }
 
 serve(async (req) => {
@@ -27,9 +28,9 @@ serve(async (req) => {
   }
 
   try {
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
-    if (!openRouterApiKey) {
-      throw new Error('OPENROUTER_API_KEY is not configured');
+    const geminiApiKey = "AIzaSyDh-pNijNq0oTM19gQauvcY3uc3FohOh2U";
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key is not configured');
     }
 
     const { prompt, type = 'generate', context }: GenerateCodeRequest = await req.json();
@@ -38,14 +39,11 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    // Prepare messages based on request type
-    let messages: OpenRouterMessage[] = [];
+    // Prepare the prompt based on request type
+    let finalPrompt = '';
 
     if (type === 'optimize') {
-      messages = [
-        {
-          role: 'system',
-          content: `You are an expert prompt optimizer for AI code generation. Your task is to take user prompts and refine them into detailed, structured specifications that will produce better AI-generated code.
+      finalPrompt = `You are an expert prompt optimizer for AI code generation. Your task is to take user prompts and refine them into detailed, structured specifications that will produce better AI-generated code.
 
 Rules for optimization:
 1. Add technical specificity and clarity
@@ -56,13 +54,9 @@ Rules for optimization:
 6. Mention testing considerations
 7. Keep the core user intent intact but make it more actionable
 
-Return only the optimized prompt, nothing else.`
-        },
-        {
-          role: 'user',
-          content: `Optimize this prompt for better AI code generation: "${prompt}"`
-        }
-      ];
+Return only the optimized prompt, nothing else.
+
+Optimize this prompt for better AI code generation: "${prompt}"`;
     } else {
       // Generate code
       let systemPrompt = `You are an expert full-stack developer specializing in React, TypeScript, and modern web development. You build beautiful, functional, and well-architected applications.
@@ -103,54 +97,47 @@ Return only the code, no explanations or markdown formatting.`;
         systemPrompt += `\n\nExisting Code Context:\n${context.previousCode}`;
       }
 
-      messages = [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ];
+      finalPrompt = `${systemPrompt}\n\nUser request: ${prompt}`;
     }
 
-    console.log(`Making OpenRouter API call for ${type} request`);
+    console.log(`Making Gemini API call for ${type} request`);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openRouterApiKey}`,
-        "HTTP-Referer": "https://lade-coder.app",
-        "X-Title": "Lade Coder - AI Website Builder",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
-        "messages": messages,
-        "max_tokens": type === 'optimize' ? 500 : 8000,
-        "temperature": 0.7,
-        "stream": false
+        contents: [{
+          parts: [{
+            text: finalPrompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: type === 'optimize' ? 500 : 8000,
+        }
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('OpenRouter API response received');
+    console.log('Gemini API response received');
 
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response format from OpenRouter API');
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Invalid response format from Gemini API');
     }
 
     const result = {
-      content: data.choices[0].message.content,
+      content: data.candidates[0].content.parts[0].text,
       type,
-      usage: data.usage,
       timestamp: new Date().toISOString()
     };
 
