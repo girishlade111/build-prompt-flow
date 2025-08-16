@@ -59,39 +59,59 @@ Return only the optimized prompt, nothing else.
 Optimize this prompt for better AI code generation: "${prompt}"`;
     } else {
       // Generate code
-      let systemPrompt = `You are an expert full-stack developer specializing in React, TypeScript, and modern web development. You build beautiful, functional, and well-architected applications.
+      let systemPrompt = `You are an expert web developer specializing in HTML, CSS, JavaScript/TypeScript, and modern web development. You create beautiful, functional, and responsive websites and applications.
 
-Core Requirements:
-- Use React 18 with TypeScript
-- Use Tailwind CSS with the existing design system tokens
-- Follow the established component patterns
-- Write clean, maintainable, and well-documented code
-- Implement proper error handling and loading states
-- Ensure responsive design and accessibility
-- Use semantic HTML elements
+CRITICAL INSTRUCTIONS:
+- Generate separate files for HTML, CSS, and JavaScript/TypeScript
+- Create a complete, functional website/application
+- Use modern, clean, and professional design
+- Ensure responsive design that works on all devices
+- Implement smooth animations and transitions
+- Use semantic HTML5 elements
+- Write efficient, well-structured code
 
-Design System:
-- Colors: Use HSL tokens from the design system (--primary, --accent, --background, etc.)
-- Never use hardcoded colors like text-white, bg-black
-- Use gradient utilities: gradient-primary, gradient-secondary
-- Apply smooth transitions and animations
-- Use the established spacing and typography scale
+FILE STRUCTURE REQUIREMENTS:
+You MUST return the code in this exact JSON format:
+{
+  "files": {
+    "index.html": "HTML content here",
+    "styles.css": "CSS content here", 
+    "script.js": "JavaScript content here"
+  }
+}
 
-Component Structure:
-- Create focused, reusable components
-- Use proper TypeScript interfaces
-- Implement proper prop validation
-- Follow React best practices and hooks patterns
-- Use motion/framer-motion for animations when appropriate
+HTML Requirements:
+- Use semantic HTML5 elements (header, main, section, article, nav, footer)
+- Include proper meta tags for SEO and responsiveness
+- Link to external fonts (Google Fonts) if needed
+- Include proper DOCTYPE and language attributes
+- Link to styles.css and script.js files
 
-Code Style:
-- Use meaningful variable and function names
-- Include JSDoc comments for complex functions
-- Organize imports properly (React, libraries, local imports)
-- Use const assertions and proper typing
-- Implement proper error boundaries where needed
+CSS Requirements:
+- Use modern CSS features (Grid, Flexbox, CSS Variables)
+- Implement responsive design with media queries
+- Use beautiful color schemes and typography
+- Add smooth transitions and hover effects
+- Ensure accessibility with proper contrast ratios
+- Use CSS Grid and Flexbox for layouts
 
-Return only the code, no explanations or markdown formatting.`;
+JavaScript Requirements:
+- Use modern ES6+ syntax
+- Implement interactive features and animations
+- Add event listeners for user interactions
+- Use proper error handling
+- Write clean, modular, and commented code
+- Include form validation if forms are present
+
+Design Guidelines:
+- Create beautiful, modern interfaces
+- Use consistent spacing and typography
+- Implement smooth animations and micro-interactions
+- Ensure excellent user experience
+- Make it visually appealing and professional
+- Use appropriate color schemes and contrast
+
+Return ONLY the JSON object with the file contents, no explanations or markdown formatting.`;
 
       if (context?.previousCode) {
         systemPrompt += `\n\nExisting Code Context:\n${context.previousCode}`;
@@ -102,7 +122,7 @@ Return only the code, no explanations or markdown formatting.`;
 
     console.log(`Making Gemini API call for ${type} request`);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -135,8 +155,25 @@ Return only the code, no explanations or markdown formatting.`;
       throw new Error('Invalid response format from Gemini API');
     }
 
+    let content = data.candidates[0].content.parts[0].text;
+    
+    // For code generation, try to parse as JSON to extract files
+    if (type === 'generate') {
+      try {
+        // Clean the content and try to extract JSON
+        const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const parsedContent = JSON.parse(cleanContent);
+        if (parsedContent.files) {
+          content = parsedContent;
+        }
+      } catch (e) {
+        // If parsing fails, keep original content
+        console.log('Could not parse as JSON, keeping original content');
+      }
+    }
+
     const result = {
-      content: data.candidates[0].content.parts[0].text,
+      content: content,
       type,
       timestamp: new Date().toISOString()
     };

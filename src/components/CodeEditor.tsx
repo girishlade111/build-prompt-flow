@@ -51,28 +51,82 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ className, generatedCode
   // Update the file tree when generatedCode changes
   useEffect(() => {
     if (generatedCode && generatedCode.trim()) {
-      setFileTree(prev => 
-        prev.map(item => {
-          if (item.name === 'src') {
-            return {
-              ...item,
-              children: item.children?.map(child => 
-                child.name === 'App.tsx' 
-                  ? { ...child, content: generatedCode }
-                  : child
-              )
-            };
-          }
-          return item;
-        })
-      );
+      console.log('Updating file tree with generated code:', generatedCode);
       
-      // Update current code if viewing App.tsx
-      if (currentFile === 'App.tsx') {
-        setCode(generatedCode);
+      try {
+        // Try to parse as JSON with multiple files
+        const parsedCode = typeof generatedCode === 'string' ? JSON.parse(generatedCode) : generatedCode;
+        
+        if (parsedCode.files) {
+          // Multiple files structure - create file tree
+          const newFileTree: FileTreeItem[] = [
+            {
+              name: 'project',
+              type: 'folder',
+              isOpen: true,
+              children: Object.entries(parsedCode.files).map(([filename, content]) => ({
+                name: filename,
+                type: 'file' as const,
+                content: content as string
+              }))
+            }
+          ];
+          
+          setFileTree(newFileTree);
+          
+          // Set the first file as current
+          const firstFile = Object.keys(parsedCode.files)[0];
+          if (firstFile) {
+            setCurrentFile(firstFile);
+          }
+        } else {
+          // Single file fallback
+          setFileTree(prev => 
+            prev.map(item => {
+              if (item.name === 'src') {
+                return {
+                  ...item,
+                  children: item.children?.map(child => 
+                    child.name === 'App.tsx' 
+                      ? { ...child, content: typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2) }
+                      : child
+                  )
+                };
+              }
+              return item;
+            })
+          );
+          
+          // Update current code if viewing App.tsx
+          if (currentFile === 'App.tsx') {
+            setCode(typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2));
+          }
+        }
+      } catch (e) {
+        // Fallback for non-JSON content
+        setFileTree(prev => 
+          prev.map(item => {
+            if (item.name === 'src') {
+              return {
+                ...item,
+                children: item.children?.map(child => 
+                  child.name === 'App.tsx' 
+                    ? { ...child, content: typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2) }
+                    : child
+                )
+              };
+            }
+            return item;
+          })
+        );
+        
+        // Update current code if viewing App.tsx
+        if (currentFile === 'App.tsx') {
+          setCode(typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2));
+        }
       }
     }
-  }, [generatedCode, currentFile]);
+  }, [generatedCode]);
 
   useEffect(() => {
     // Load file content when currentFile changes

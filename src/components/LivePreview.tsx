@@ -18,31 +18,88 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 }) => {
   // Use generated code if available, otherwise show default content
   const previewContent = generatedCode && generatedCode.trim() ? 
-    `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Generated Website</title>
-      <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-      <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-      <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-      </style>
-    </head>
-    <body>
-      <div id="root"></div>
-      <script type="text/babel">
-        ${generatedCode}
+    (() => {
+      try {
+        // Try to parse as JSON with multiple files
+        const parsedCode = typeof generatedCode === 'string' ? JSON.parse(generatedCode) : generatedCode;
         
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-      </script>
-    </body>
-    </html>` :
+        if (parsedCode.files) {
+          // Multiple files structure - construct HTML
+          const htmlContent = parsedCode.files['index.html'] || '';
+          let cssContent = parsedCode.files['styles.css'] || parsedCode.files['style.css'] || '';
+          let jsContent = parsedCode.files['script.js'] || parsedCode.files['main.js'] || parsedCode.files['app.js'] || '';
+          
+          // Inject CSS and JS into HTML if not already included
+          let finalHtml = htmlContent;
+          
+          if (cssContent && !htmlContent.includes('<style>') && !htmlContent.includes('styles.css')) {
+            finalHtml = finalHtml.replace('</head>', `<style>${cssContent}</style></head>`);
+          }
+          
+          if (jsContent && !htmlContent.includes('<script>') && !htmlContent.includes('script.js')) {
+            finalHtml = finalHtml.replace('</body>', `<script>${jsContent}</script></body>`);
+          }
+          
+          return finalHtml;
+        } else {
+          // Single file React component fallback
+          const codeContent = typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2);
+          return `<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Generated Website</title>
+            <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+              body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+            </style>
+          </head>
+          <body>
+            <div id="root"></div>
+            <script type="text/babel">
+              ${codeContent}
+              
+              const root = ReactDOM.createRoot(document.getElementById('root'));
+              root.render(<App />);
+            </script>
+          </body>
+          </html>`;
+        }
+      } catch (e) {
+        // Fallback for non-JSON content
+        const codeContent = typeof generatedCode === 'string' ? generatedCode : JSON.stringify(generatedCode, null, 2);
+        return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Generated Website</title>
+          <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+          </style>
+        </head>
+        <body>
+          <div id="root"></div>
+          <script type="text/babel">
+            ${codeContent}
+            
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+          </script>
+        </body>
+        </html>`;
+      }
+    })() :
     `<!DOCTYPE html>
     <html lang="en">
     <head>
