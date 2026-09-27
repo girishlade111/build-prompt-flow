@@ -1,73 +1,113 @@
-# Welcome to your Lovable project
+# Build Prompt Flow
 
-## Project info
+An AI-assisted code generation workspace. Describe what you want to build in a
+chat panel, stream the generated code into a Monaco editor, preview it live,
+and walk back through every version — a Lovable-style prompt → code → preview
+loop in your own repo.
 
-**URL**: https://lovable.dev/projects/6631c90c-7148-4828-ab48-1ce558de3a4b
+## What it does
 
-## How can I edit this code?
+Build Prompt Flow combines a conversational prompt interface with a real code
+editor and live preview. You type (or refine) a prompt, the app calls an AI
+code-generation backend, the result streams into the editor, and you can
+preview, tweak, and iterate — with a full version history of everything
+generated.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Prompt bar** — natural-language input for describing or refining the app to build
+- **Chat panel** — conversational history of the build session
+- **Streaming code generation** — AI-generated code streams in as it's produced
+  (`src/hooks/useCodeGeneration.ts`)
+- **Monaco code editor** — full-featured editor for generated code
+  (`src/components/CodeEditor.tsx`)
+- **Live preview** — render the generated app instantly
+  (`src/components/LivePreview.tsx`)
+- **Version history** — browse and restore earlier generations
+  (`src/components/VersionHistory.tsx`)
+- **Landing page** — marketing-style entry page (`src/components/LandingPage.tsx`)
+- **Supabase integration** — AI generation goes through a Supabase Edge Function
+  (`generate-code`), plus client-side auth/session helpers
+- **Modern UI** — shadcn/ui components, Tailwind CSS, Framer Motion animations
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6631c90c-7148-4828-ab48-1ce558de3a4b) and start prompting.
+## Tech stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Vite** + **React 18** + **TypeScript**
+- **Monaco Editor** (`@monaco-editor/react`)
+- **Supabase** (`@supabase/supabase-js`) — Edge Function backend for code generation
+- **shadcn/ui** (Radix primitives) + **Tailwind CSS**
+- **Framer Motion**, **TanStack Query**, **React Router**
 
-**Use your preferred IDE**
+## Quick start
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Prerequisites: Node.js 18+ and npm.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+# Install dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Run the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open the printed local URL (default `http://localhost:8080`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Production build
+npm run build        # output goes to dist/
+npm run preview      # preview the production build
+```
 
-**Use GitHub Codespaces**
+## Project structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+  App.tsx                 # Router + providers (query client, tooltips, toasts)
+  main.tsx                # Entry point
+  pages/
+    Index.tsx             # Main page composition
+    NotFound.tsx          # 404 page
+  components/
+    LandingPage.tsx       # Marketing/entry page
+    Workspace.tsx         # Main workspace layout
+    ChatPanel.tsx         # Build-session chat
+    PromptBar.tsx         # Prompt input
+    CodeEditor.tsx        # Monaco editor for generated code
+    LivePreview.tsx       # Live render of generated code
+    VersionHistory.tsx    # Generation history browser
+    ui/                   # shadcn/ui primitives
+  hooks/
+    useCodeGeneration.ts  # Calls the Supabase `generate-code` edge function
+  integrations/
+    supabase/
+      client.ts           # Supabase client (URL + publishable key)
+      types.ts            # Generated DB types
+public/
+  _redirects              # SPA fallback for static hosts
+```
 
-## What technologies are used for this project?
+## Environment variables / backend notes
 
-This project is built with:
+Code generation requires the Supabase Edge Function `generate-code` deployed on
+the Supabase project configured in `src/integrations/supabase/client.ts`.
+Without that function deployed (or with different credentials), the UI loads
+but generation calls will fail. The key committed here is the Supabase
+**publishable (anon) key**, which is safe to expose in a client app — row-level
+security and function secrets live on the Supabase project itself.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Deployment
 
-## How can I deploy this project?
+Fully static (`vite build` → `dist/`). Deploy to any static host:
 
-Simply open [Lovable](https://lovable.dev/projects/6631c90c-7148-4828-ab48-1ce558de3a4b) and click on Share -> Publish.
+```bash
+npm run build
+# host the dist/ directory
+```
 
-## Can I connect a custom domain to my Lovable project?
+`public/_redirects` (`/* /index.html 200`) keeps client-side routing working on
+Cloudflare Pages / Netlify. Originally built with
+[Lovable](https://lovable.dev/projects/6631c90c-7148-4828-ab48-1ce558de3a4b).
 
-Yes, you can!
+## Credits
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Built by Girish Lade — https://ladestack.in
